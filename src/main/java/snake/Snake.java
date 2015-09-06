@@ -70,7 +70,7 @@ public class Snake {
 			tiles.add(segment);
 		}
 
-		int indexOfFruit = fruits.indexOf(segment);
+		int indexOfFruit = fruits.indexOf(getHead());
 		if (indexOfFruit != -1) {
 			Fruit fruit = fruits.get(indexOfFruit);
 			fruits.remove(indexOfFruit);

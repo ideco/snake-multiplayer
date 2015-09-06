@@ -1,6 +1,8 @@
 package snake;
 
 import java.awt.Container;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,15 +14,19 @@ import javax.swing.JLayeredPane;
 @SuppressWarnings("serial")
 public class Game extends JFrame {
 
-	private static final int WIDTH = 80;
-	private static final int HEIGHT = 40;
+	private final GameKeyListener gameKeyListener = new GameKeyListener();
+
+	private static final int WIDTH = 50;
+	private static final int HEIGHT = 30;
 	private static final int TILE_SIZE = 20;
 	private static final int NR_FRUITS = 2;
 	private Board board;
+	private boolean restart = false;
 
 	public Game() {
 		setSize(WIDTH * TILE_SIZE, HEIGHT * TILE_SIZE);
 		setResizable(false);
+		addKeyListener(gameKeyListener);
 	}
 
 	public void start() {
@@ -38,15 +44,8 @@ public class Game extends JFrame {
 		HashSet<Tile> tiles = new HashSet<Tile>();
 		List<Snake> snakes = Snake.newSnakes(2, WIDTH, HEIGHT);
 		LinkedList<Fruit> fruits = new LinkedList<Fruit>();
-
-		for (Snake snake : snakes) {
-			addKeyListener(snake.getKeyListener());
-			board.addKeyListener(snake.getKeyListener());
-			addTiles(tiles, snake);
-		}
-
-		fruits.add(Fruit.getNew(100, tiles, WIDTH, HEIGHT));
-		while (!snakes.isEmpty()) {
+		initTiles(tiles, snakes, fruits);
+		while (!snakes.isEmpty() && !isRestart()) {
 			tiles = new HashSet<Tile>();
 			moveSnakes(snakes, fruits);
 			removeCollidedSnakes(snakes);
@@ -54,6 +53,19 @@ public class Game extends JFrame {
 			addFruitTiles(tiles, fruits);
 			board.repaint(tiles);
 			sleep(100);
+		}
+		restart();
+	}
+
+	private void initTiles(HashSet<Tile> tiles, List<Snake> snakes,
+			LinkedList<Fruit> fruits) {
+		for (Snake snake : snakes) {
+			addKeyListener(snake.getKeyListener());
+			board.addKeyListener(snake.getKeyListener());
+			addTiles(tiles, snake);
+		}
+		for (int i = 0; i < NR_FRUITS; i++) {
+			fruits.add(Fruit.getNew(100, tiles, WIDTH, HEIGHT));
 		}
 	}
 
@@ -82,13 +94,14 @@ public class Game extends JFrame {
 	}
 
 	private void removeCollidedSnakes(List<Snake> snakes) {
-		List<Snake> toRemove = new LinkedList<Snake>();	
+		List<Snake> toRemove = new LinkedList<Snake>();
 		for (Snake first : snakes) {
 			for (Snake other : snakes) {
-				if (first != other && other.getTiles().contains(first.getHead())) {
+				if (first != other
+						&& other.getTiles().contains(first.getHead())) {
 					toRemove.add(first);
 				}
-			
+
 			}
 		}
 		for (Snake snake : toRemove) {
@@ -98,7 +111,7 @@ public class Game extends JFrame {
 
 	private void moveSnakes(List<Snake> snakes, LinkedList<Fruit> fruits) {
 		for (Snake snake : snakes) {
-			if(!snake.move(fruits)) {
+			if (!snake.move(fruits)) {
 				snakes.remove(snake);
 			}
 		}
@@ -115,4 +128,39 @@ public class Game extends JFrame {
 		return true;
 	}
 
+	private void scheduleRestart() {
+		restart = true;
+	}
+
+	private void restart() {
+		if (restart) {
+			restart = false;
+			run();
+		}
+	}
+
+	private boolean isRestart() {
+		return restart;
+	}
+
+	private final class GameKeyListener implements KeyListener {
+		public void keyTyped(KeyEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		public void keyReleased(KeyEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		public void keyPressed(KeyEvent e) {
+			if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+				System.exit(1);
+			} else if (e.getKeyCode() == KeyEvent.VK_R) {
+				scheduleRestart();
+			}
+
+		}
+	}
 }
